@@ -1,0 +1,38 @@
+# Ignore Laravel environment files
+./-project_root/-astudio-job-matrix/.env
+./-project_root/-astudio-job-matrix/.env.*
+
+# Ignore storage and cache directories
+./-project_root/-astudio-job-matrix/storage/
+./-project_root/-astudio-job-matrix/bootstrap/cache/
+
+# Ignore Composer dependencies (can be installed with `composer install`)
+./-project_root/-astudio-job-matrix/vendor/
+
+# Ignore MySQL volume data
+./-project_root_volumes/mysql/
+
+# Ignore MySQL socket file
+./-project_root_volumes/mysql/mysql.sock
+./-project_root_volumes/mysql/*.sock
+
+# Ignore logs
+./*.log
+./logs/
+./-project_root_logs/
+./-project_root/-astudio-job-matrix/storage/logs/
+./-services&configs/php-config/php.ini
+
+# Ignore temporary files and test scripts
+./-project_root/-astudio-job-matrix/public/info.php
+
+# Ignore Docker-related temporary files
+docker-compose.override.yml
+./-services&configs/adminer/Dockerfile
+./-services&configs/apache-config/*
+./-services&configs/php-config/*
+./-services&configs/php8.2-fpm-alpine/*
+./-services&configs/apache2.4-alpine/*
+
+# Ignore first-time run scripts (optional)
+./-cmd_run_firsttime

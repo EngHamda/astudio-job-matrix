@@ -1,0 +1,88 @@
+#The Docker Compose documentation explains that the top-level version property is now obsolete and is only used for backward compatibility.
+#Docker Compose does not use the version property to select a schema for validation.
+#The name property, on the other hand, is used to set the project name if not explicitly defined, which can be overridden.
+#This project name is available for interpolation and environment variable resolution as COMPOSE_PROJECT_NAME.
+# Docker Compose version: v2.27.0-desktop.2
+#version: '3.8'
+name: laravel_application
+
+services:
+    php:
+        build:
+            context: .
+            dockerfile: ./-services&configs/-php8.2-fpm-alpine/Dockerfile
+        image: local_php_8.2_server_alpine:FullStack_Git_T1 #php_8.2-fpm-alpine
+        container_name: compose_php_server_8.2-fpm-alpine
+        volumes:
+            - ./-project_root/-astudio-job-matrix:/var/www  # Mount Laravel project directory
+#            - .:/var/www # "general php not specific project"
+            - ./-services&configs/-php-config/php.ini:/usr/local/etc/php/php.ini
+            - ./-project_root_logs/xdebug:/var/log/xdebug  # Mount Xdebug log directory
+            - ./-project_root/-astudio-job-matrix/.env:/var/www/.env  # Mount .env file [For Laravel, Mysql]
+#            - /var/run/docker.sock:/var/run/docker.sock  # Mount Docker socket "Fix Error: Docker is not running."
+
+        expose:
+            - "9000"
+        ports:
+          - "9005:9003"  # Ensure this port matches xdebug.client_port in PHP configuration
+        environment:
+          - XDEBUG_MODE=debug,profile
+          - XDEBUG_CONFIG=client_host=host.docker.internal client_port=9003
+        restart: always
+        depends_on:
+            - mysql # for laravel
+
+    apache:
+        build:
+            context: .
+            dockerfile: ./-services&configs/-apache2.4-alpine/Dockerfile
+        image: local_apache_2.4_server_alpine:Fullstack_T1
+        container_name: compose_apache_2.4_server-alpine
+        ports:
+            - "80:80" # host:container
+        volumes:
+            - ./-project_root/-astudio-job-matrix:/var/www  # Mount Laravel project directory Your web content IF it commented will get apache index page
+#            - .:/usr/local/apache2/htdocs  # "general apache not specific project"
+            - ./-services&configs/-apache-config:/usr/local/apache2/conf  # Your custom configuration
+            - ./-project_root_logs/apache:/usr/local/apache2/logs  # Log directory
+        restart: always
+        depends_on:
+            - php
+#       Apache needs to communicate with PHP-FPM to handle PHP scripts. Therefore, Apache (specifically, the Apache container) should depend on PHP-FPM being available and ready before it starts.
+
+    mysql:
+        image: mysql:8.0
+        container_name: compose_mysql_db_server
+#        ensures compatibility with older MySQL clients
+        command: --default-authentication-plugin=mysql_native_password
+        environment:
+#            MYSQL_ROOT_PASSWORD: docker_root_password
+#            MYSQL_DATABASE: app_db
+#            MYSQL_USER: app_user
+#            MYSQL_PASSWORD: app_password
+            MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+            MYSQL_DATABASE: ${MYSQL_DATABASE}
+            MYSQL_USER: ${MYSQL_USER}
+            MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+
+#            MYSQL_DATABASE: ${DB_DATABASE} # need to ensure that the DB_* variables are set correctly in the .env file without referencing other variables.
+#            MYSQL_USER: ${DB_USERNAME}
+#            MYSQL_PASSWORD: ${DB_PASSWORD}
+
+        ports:
+            - "3306:3306"
+        volumes:
+            - ./-project_root_volumes/mysql:/var/lib/mysql
+        restart: always
+        mem_limit: 1g
+
+    adminer:
+        image: local_adminer_alpine:FullStack_T1
+        container_name: compose_adminer
+#        environment:
+#            ADMINER_DEFAULT_SERVER: mysql
+        ports:
+            - "8080:8080"
+        restart: always
+        depends_on:
+            - mysql
