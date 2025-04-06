@@ -1,66 +1,258 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# Job Filtering System
+# Table of Contents
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+- [Overview](#overview)
+- [Basic Usage](#basic-usage)
+- [Supported Filter Types](#supported-filter-types)
+- [Logical Operators & Grouping](#logical-operators--grouping)
+- [Schema Design](#schema-design)
+- [Architecture / Implementation Details](#architecture--implementation-details)
+- [Job API Documentation](#job-api-documentation)
+  - [API Overview](#api-overview)
+  - [Endpoints](#endpoints)
+    - [GET /api/jobs](#get-apijobs)
+    - [GET /api/jobsid](#get-apijobsid)
+  - [Error Handling](#error-handling)
 
-## About Laravel
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+## Overview
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+The Job Filtering System provides a robust mechanism for filtering job listings through complex query conditions. The
+system supports logical operators (AND/OR), condition grouping, and multiple filter types to enable powerful search
+capabilities.
 
-## Learning Laravel
+## Basic Usage
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+Jobs can be filtered using the `filter` query parameter:
 
-You may also try the [Laravel Bootcamp](https://bootcamp.laravel.com), where you will be guided through building a modern Laravel application from scratch.
+> **GET** /api/jobs?filter=CONDITION
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+- `CONDITION` may be a single expression or a nested logical combination.
+- Examples:
+    - Simple:
+      `/api/jobs?filter=job_type=full-time`
+    - Combined:
+      `/api/jobs?filter=salary_min>=50000 AND is_remote=true`
+    - Nested:
+      `/api/jobs?filter=(job_type=full-time AND (languages:name HAS_ANY (PHP,JavaScript))) AND attribute:Experience Level>=3`
 
-## Laravel Sponsors
+## Supported Filter Types
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+The system supports three categories of filters, each with its own operators:
 
-### Premium Partners
+1. **Basic Filters** (CoreJob columns)
+    - **Text/String** (e.g., `title`, `description`, `company_name`)
+      Operators: `=`, `!=`, `LIKE`
+    - **Numeric** (e.g., `salary_min`, `salary_max`)
+      Operators: `=`, `!=`, `>`, `<`, `>=`, `<=`
+    - **Boolean** (e.g., `is_remote`)
+      Operators: `=`, `!=`
+    - **Enum** (e.g., `job_type`, `status`)
+      Operators: `=`, `!=`, `IN`
+    - **Date** (e.g., `published_at`, `created_at`)
+      Operators: `=`, `!=`, `>`, `<`, `>=`, `<=`
 
-- **[Vehikl](https://vehikl.com/)**
-- **[Tighten Co.](https://tighten.co)**
-- **[WebReinvent](https://webreinvent.com/)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel/)**
-- **[Cyber-Duck](https://cyber-duck.co.uk)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Jump24](https://jump24.co.uk)**
-- **[Redberry](https://redberry.international/laravel/)**
-- **[Active Logic](https://activelogic.com)**
-- **[byte5](https://byte5.de)**
-- **[OP.GG](https://op.gg)**
+2. **Relationship Filters** (related models)
+    - **Syntax:** `relation OPERATOR (value1,value2,…)`
+    - **Operators:**
+        - `EXISTS`   – relationship exists
+        - `HAS_ANY`  – any of the specified values
+        - `HAS_ALL`  – all of the specified values
+        - `IS_ANY`   – match any one of the specified values
+    - **Examples:**
+        - `languages:name HAS_ANY (PHP,JavaScript)`
+        - `locations:city IS_ANY (New York,Remote)`
 
-## Contributing
+3. **EAV Filters** (dynamic attributes)
+    - **Syntax:** `attribute:NAME OPERATOR value`
+    - **Select Attributes** (e.g., `experience_level`)
+      Operators: `=`, `!=`, `IN`
+    - **Text Attributes**
+      Operators: `=`, `!=`, `LIKE`
+    - **Number Attributes**
+      Operators: `=`, `!=`, `>`, `<`, `>=`, `<=`
+    - **Boolean Attributes**
+      Operators: `=`, `!=`
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+---
 
-## Code of Conduct
+_All attribute types (text, number, boolean) share the same comparison operators as their basic counterparts._
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+## Logical Operators & Grouping
 
-## Security Vulnerabilities
+The filtering syntax supports full logical expressions, including nesting:
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+- **Operators**
+    - `AND` – both conditions must be true
+    - `OR`  – at least one condition must be true
 
-## License
+- **Grouping**
+    - Use parentheses `()` to control evaluation order and nest expressions
+    - Parentheses must be balanced
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+- **Behavior**
+    - You can combine any number of conditions
+    - Nested groups are evaluated before their parent expression
+
+- **Example**
+    - `(job_type=full-time AND is_remote=true) OR (job_type=contract AND salary_min>=100000)`
+
+## Schema Design
+
+The database schema for The application:
+
+### Core Tables
+
+1. **core_jobs**
+   * Contains essential job listing information (title, description, salary ranges, etc.)
+   * Uses appropriate data types for each field
+   * Includes status field for job lifecycle management
+   * Timestamps for creation and updates
+
+2. **attributes**
+   * Stores metadata about dynamic attributes
+   * Includes type information for proper validation and display
+   * Support for options (e.g., for select fields)
+   * Required flag for validation
+
+3. **job_attribute_values**
+   * Implements the Entity-Attribute-Value (EAV) pattern
+   * Allows for flexible, schema-less attributes on jobs
+   * References both job and attribute
+
+### Relationship Tables
+
+1. **languages** & **job_language**
+   * Many-to-many relationship between jobs and programming languages
+   * Normalized design
+
+2. **locations** & **job_location**
+   * Many-to-many relationship between jobs and locations
+   * Normalized design with city, state, country fields
+
+3. **categories** & **job_category**
+   * Many-to-many relationship between jobs and job categories
+   * Normalized design
+
+## Architecture / Implementation Details
+
+The system follows a modular design with clear separation of concerns:
+
+- **FilterParser**: Parses complex filter strings into structured arrays
+- **ConditionParser**: Identifies and categorizes individual conditions (Splits each condition into field, operator, and value)
+- **Condition Handlers**: Apply the appropriate filtering logic to database queries
+    - `BasicConditionHandler`: Applies filters on CoreJob columns
+    - `RelationshipConditionHandler`: Applies filters on relationships
+    - `EavConditionHandler`: Applies filters on EAV attributes
+- **JobFilterService**: Orchestrates the parsing and handler execution to build the final Eloquent query
+
+---
+# Job API Documentation
+
+## API Overview
+
+The Job API provides endpoints to search, filter, and retrieve job listings using a powerful and flexible query system.
+
+## Endpoints
+
+### GET /api/jobs
+
+Retrieves a list of jobs with optional filtering.
+
+#### Query Parameters
+
+| Parameter | Type   | Description                                     | Required |
+|-----------|--------|-------------------------------------------------|----------|
+| filter    | string | Complex filter query string                     | No       |
+| page      | int    | Page number for pagination                      | No       |
+| per_page  | int    | Items per page for pagination                   | No       |
+| sort      | string | Field to sort by (prefix with - for descending) | No       |
+
+#### Filter Format
+
+See the README documentation for detailed filter syntax.
+
+#### Response Format
+
+```json
+{
+    "data": [
+        {
+            "id": 1,
+            "title": "Senior PHP Developer",
+            "description": "Experience with Laravel required",
+            "company_name": "TechCorp",
+            "salary_min": 80000.00,
+            "salary_max": 120000.00,
+            "is_remote": true,
+            "job_type": "full-time",
+            "status": "published",
+            "published_at": "2025-03-01T00:00:00Z",
+            "created_at": "2025-02-15T00:00:00Z",
+            "updated_at": "2025-02-15T00:00:00Z",
+            "languages": [
+                {
+                    "id": 1,
+                    "name": "PHP"
+                },
+                {
+                    "id": 3,
+                    "name": "JavaScript"
+                }
+            ],
+            "locations": [
+                {
+                    "id": 5,
+                    "city": "Remote"
+                }
+            ],
+            "categories": [
+                {
+                    "id": 2,
+                    "name": "Backend Development"
+                }
+            ],
+            "attributes": {
+                "Experience Level": 5,
+                "framework": "Laravel",
+                "team_size": 8
+            }
+        }
+        /* more jobs... */
+    ],
+    "links": {
+        "first": "https://example.com/api/jobs?page=1",
+        "last": "https://example.com/api/jobs?page=5",
+        "prev": null,
+        "next": "https://example.com/api/jobs?page=2"
+    },
+    "meta": {
+        "current_page": 1,
+        "from": 1,
+        "last_page": 5,
+        "path": "https://example.com/api/jobs",
+        "per_page": 15,
+        "to": 15,
+        "total": 72
+    }
+}
+```
+
+## Error Handling
+
+The API returns standard HTTP status codes:
+
+- 200: Success
+- 400: Bad Request (invalid filter syntax)
+- 404: Job not found
+- 500: Server error
+
+Error responses include a message field explaining the error:
+
+```json
+{
+  "error": true,
+  "message": "Invalid filter syntax: Unbalanced parentheses in filter expression"
+}
+```
