@@ -3,6 +3,7 @@
 
 - [Overview](#overview)
 - [Basic Usage](#basic-usage)
+- [Query Parameter Format](#query-parameter-format)
 - [Supported Filter Types](#supported-filter-types)
 - [Logical Operators & Grouping](#logical-operators--grouping)
 - [Schema Design](#schema-design)
@@ -11,7 +12,6 @@
   - [API Overview](#api-overview)
   - [Endpoints](#endpoints)
     - [GET /api/jobs](#get-apijobs)
-    - [GET /api/jobsid](#get-apijobsid)
   - [Error Handling](#error-handling)
 
 
@@ -36,6 +36,111 @@ Jobs can be filtered using the `filter` query parameter:
       `/api/jobs?filter=salary_min>=50000 AND is_remote=true`
     - Nested:
       `/api/jobs?filter=(job_type=full-time AND (languages:name HAS_ANY (PHP,JavaScript))) AND attribute:Experience Level>=3`
+
+## Query Parameter Format
+
+The query parameter format supports complex filtering operations through a structured syntax. This section describes in detail how to construct filter expressions.
+
+### General Format
+
+```
+filter=EXPRESSION
+```
+
+Where `EXPRESSION` can be a simple condition or a complex logical combination of conditions.
+
+### Basic Conditions
+
+Basic conditions follow this format:
+
+```
+field OPERATOR value
+```
+
+- `field`: A column name from the core_jobs table (e.g., title, salary_min)
+- `OPERATOR`: A comparison operator (=, !=, >, <, >=, <=, LIKE, IN)
+- `value`: The value to compare against
+
+Examples:
+- `job_type=full-time`
+- `salary_min>=50000`
+- `title LIKE %developer%`
+- `job_type IN (full-time,contract)`
+
+### Relationship Conditions
+
+Relationship conditions filter based on related models:
+
+```
+relation:column OPERATOR (value1,value2,...)
+```
+
+- `relation`: The name of the relationship (languages, locations, categories)
+- `column`: (Optional) The specific column to filter on (e.g., name, city)
+- `OPERATOR`: A relationship operator (EXISTS, HAS_ANY, HAS_ALL, IS_ANY)
+- `(value1,value2,...)`: A comma-separated list of values enclosed in parentheses
+
+Examples:
+- `languages:name HAS_ANY (PHP,JavaScript)`
+- `locations:city IS_ANY (New York,Remote)`
+- `categories:name=Design`
+
+### EAV (Dynamic Attribute) Conditions
+
+EAV conditions filter based on dynamic attributes:
+
+```
+attribute:AttributeName OPERATOR value
+```
+
+- `attribute:`: Prefix indicating an EAV filter
+- `AttributeName`: The name of the attribute (e.g., Experience Level, Years of Experience)
+- `OPERATOR`: A comparison operator matching the attribute type
+- `value`: The value to compare against
+
+Examples:
+- `attribute:Experience Level=Senior Level`
+- `attribute:Years of Experience>=5`
+- `attribute:Relocation Possible=true`
+
+### Complex Expressions
+
+Conditions can be combined using logical operators:
+
+```
+condition1 LOGICAL_OPERATOR condition2
+```
+
+- `condition1`, `condition2`: Simple conditions or grouped expressions
+- `LOGICAL_OPERATOR`: AND or OR
+
+Examples:
+- `job_type=full-time AND is_remote=true`
+- `salary_min>=50000 OR salary_max>=80000`
+
+### Grouping
+
+Parentheses can be used to group conditions and control evaluation order:
+
+```
+(condition1 AND condition2) OR condition3
+```
+
+Examples:
+- `(job_type=full-time AND is_remote=true) OR (job_type=contract AND salary_min>=100000)`
+- `(languages:name HAS_ANY (PHP,JavaScript)) AND (attribute:Experience Level IN (Mid Level,Senior Level))`
+
+### Complex Example
+
+```
+(job_type=full-time AND (languages:name HAS_ANY (PHP,JavaScript))) AND (locations:city IS_ANY (New York,Remote)) AND attribute:Experience Level=Senior Level
+```
+
+This filter will find:
+- Full-time jobs
+- That require either PHP or JavaScript
+- Located in either New York or Remote
+- Requiring Senior Level experience
 
 ## Supported Filter Types
 
