@@ -2,6 +2,7 @@
 
 namespace App\Services\JobFilters\Handlers;
 
+use App\Exceptions\FilterException;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Log;
@@ -16,6 +17,7 @@ class RelationshipConditionHandler extends AbstractConditionHandler
      * @param Builder<TModel> $query
      * @param string $conditionStr
      * @return Builder<TModel>
+     * @throws FilterException
      */
     public function handle(Builder $query, string $conditionStr): Builder
     {
@@ -28,6 +30,7 @@ class RelationshipConditionHandler extends AbstractConditionHandler
      * @param Builder $query
      * @param string $conditionStr
      * @return Builder
+     * @throws FilterException
      */
     public function apply(Builder $query, string $conditionStr): Builder
     {
@@ -70,7 +73,8 @@ class RelationshipConditionHandler extends AbstractConditionHandler
         }
 
         Log::warning("Invalid relationship condition format", ['condition' => $conditionStr]);
-        return $query;
+        throw new FilterException("Invalid relationship condition format: $conditionStr");
+//        return $query;
     }
 
     /**

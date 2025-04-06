@@ -64,7 +64,6 @@ class JobResource extends JsonResource
                         'city' => $location->city,
                         'state' => $location->state,
                         'country' => $location->country,
-//                        'full_location' => $location->full_location
                     ];
                 });
             }),

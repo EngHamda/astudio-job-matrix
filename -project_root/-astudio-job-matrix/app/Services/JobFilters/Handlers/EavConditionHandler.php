@@ -4,6 +4,7 @@ namespace App\Services\JobFilters\Handlers;
 
 use DateTime;
 use Exception;
+use App\Exceptions\FilterException;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
@@ -20,6 +21,7 @@ class EavConditionHandler extends AbstractConditionHandler
      * @param Builder<TModel> $query
      * @param string $conditionStr
      * @return Builder<TModel>
+     * @throws FilterException
      */
     public function handle(Builder $query, string $conditionStr): Builder
     {
@@ -32,13 +34,14 @@ class EavConditionHandler extends AbstractConditionHandler
      * @param Builder $query
      * @param string $conditionStr
      * @return Builder
+     * @throws FilterException
      */
     public function apply(Builder $query, string $conditionStr): Builder
     {
         // Parse the condition string (e.g., "attribute:years_experience>=3")
         if (!Str::contains($conditionStr, 'attribute:')) {
             Log::warning("Invalid EAV condition format", ['condition' => $conditionStr]);
-            return $query;
+            throw new FilterException("Invalid EAV condition format: $conditionStr");
         }
 
         // Extract attribute name and condition
@@ -46,7 +49,7 @@ class EavConditionHandler extends AbstractConditionHandler
         $parts = $this->parseConditionString($attributeStr);
         if (!$parts) {
             Log::warning("Invalid EAV condition format", ['condition' => $conditionStr]);
-            return $query;
+            throw new FilterException("Invalid EAV condition format: $conditionStr");
         }
 
         [$attributeName, $operator, $value] = $parts;
@@ -56,7 +59,7 @@ class EavConditionHandler extends AbstractConditionHandler
 
         if (!$attribute) {
             Log::warning("Attribute not found", ['attribute' => $attributeName]);
-            return $query;
+            throw new FilterException("Attribute not found: $attributeName");
         }
 
         Log::info("Processing EAV attribute", ['name' => $attributeName, 'type' => $attribute->type]);
@@ -75,7 +78,7 @@ class EavConditionHandler extends AbstractConditionHandler
                 return $this->applyEavDateCondition($query, $attribute->id, $operator, $value);
             default:
                 Log::warning("Unsupported attribute type", ['type' => $attribute->type]);
-                return $query;
+                throw new FilterException("Unsupported attribute type: " . $attribute->type);
         }
     }
 
@@ -87,12 +90,13 @@ class EavConditionHandler extends AbstractConditionHandler
      * @param string $operator
      * @param string $value
      * @return Builder
+     * @throws FilterException
      */
     protected function applyEavStringCondition(Builder $query, int $attributeId, string $operator, string $value): Builder
     {
         if (!in_array($operator, $this->config['valid_operators']['string'])) {
             Log::warning("Invalid operator for text attribute", ['operator' => $operator]);
-            return $query;
+            throw new FilterException("Invalid operator for text attribute: " . $operator);
         }
 
         return $query->whereHas('jobAttributeValues', function ($subQuery) use ($attributeId, $operator, $value) {
@@ -114,17 +118,18 @@ class EavConditionHandler extends AbstractConditionHandler
      * @param string $operator
      * @param string $value
      * @return Builder
+     * @throws FilterException
      */
     protected function applyEavNumericCondition(Builder $query, int $attributeId, string $operator, string $value): Builder
     {
         if (!in_array($operator, $this->config['valid_operators']['numeric'])) {
             Log::warning("Invalid operator for numeric attribute", ['operator' => $operator]);
-            return $query;
+            throw new FilterException("Invalid operator for numeric attribute: " . $operator);
         }
 
         if (!is_numeric($value)) {
             Log::warning("Non-numeric value for numeric attribute", ['value' => $value]);
-            return $query;
+            throw new FilterException("Non-numeric value for numeric attribute: " . $value);
         }
 
         return $query->whereHas('jobAttributeValues', function ($subQuery) use ($attributeId, $operator, $value) {
@@ -141,18 +146,19 @@ class EavConditionHandler extends AbstractConditionHandler
      * @param string $operator
      * @param string $value
      * @return Builder
+     * @throws FilterException
      */
     protected function applyEavBooleanCondition(Builder $query, int $attributeId, string $operator, string $value): Builder
     {
         if (!in_array($operator, $this->config['valid_operators']['boolean'])) {
             Log::warning("Invalid operator for boolean attribute", ['operator' => $operator]);
-            return $query;
+            throw new FilterException("Invalid operator for boolean attribute: " . $operator);
         }
 
         $boolValue = filter_var($value, FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE);
         if ($boolValue === null) {
             Log::warning("Invalid boolean value for attribute", ['value' => $value]);
-            return $query;
+            throw new FilterException("Invalid boolean value for attribute: " . $value);
         }
 
         return $query->whereHas('jobAttributeValues', function ($subQuery) use ($attributeId, $operator, $boolValue) {
@@ -170,12 +176,13 @@ class EavConditionHandler extends AbstractConditionHandler
      * @param string $value
      * @param array $allowedValues
      * @return Builder
+     * @throws FilterException
      */
     protected function applyEavSelectCondition(Builder $query, int $attributeId, string $operator, string $value, array $allowedValues): Builder
     {
         if (!in_array($operator, $this->config['valid_operators']['enum'])) {
             Log::warning("Invalid operator for select attribute", ['operator' => $operator]);
-            return $query;
+            throw new FilterException("Invalid operator for select attribute: " . $operator);
         }
 
         if ($operator === 'IN') {
@@ -189,7 +196,7 @@ class EavConditionHandler extends AbstractConditionHandler
 
             if (empty($validValues)) {
                 Log::warning("No valid values for select attribute", ['values' => $values]);
-                return $query;
+                throw new FilterException("No valid values for select attribute: ", $values);
             }
 
             return $query->whereHas('jobAttributeValues', function ($subQuery) use ($attributeId, $validValues) {
@@ -213,7 +220,7 @@ class EavConditionHandler extends AbstractConditionHandler
             // For = operator
             if (!in_array($value, $allowedValues)) {
                 Log::warning("Invalid value for select attribute", ['value' => $value]);
-                return $query;
+                throw new FilterException("Invalid value for select attribute: " . $value);
             }
 
             return $query->whereHas('jobAttributeValues', function ($subQuery) use ($attributeId, $value) {
@@ -231,12 +238,13 @@ class EavConditionHandler extends AbstractConditionHandler
      * @param string $operator
      * @param string $value
      * @return Builder
+     * @throws FilterException
      */
     protected function applyEavDateCondition(Builder $query, int $attributeId, string $operator, string $value): Builder
     {
         if (!in_array($operator, $this->config['valid_operators']['date'])) {
             Log::warning("Invalid operator for date attribute", ['operator' => $operator]);
-            return $query;
+            throw new FilterException("Invalid operator for date attribute: " . $operator);
         }
 
         try {
@@ -248,7 +256,7 @@ class EavConditionHandler extends AbstractConditionHandler
             });
         } catch (Exception $e) {
             Log::warning("Invalid date format for attribute", ['value' => $value, 'error' => $e->getMessage()]);
-            return $query;
+            throw new FilterException("Invalid date format for attribute, value => " . $value);
         }
     }
 }
