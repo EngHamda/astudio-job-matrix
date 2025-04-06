@@ -20,6 +20,7 @@
 ./*.log
 ./logs/
 ./-project_root_logs/
+./-project_root_volumes/
 ./-project_root/-astudio-job-matrix/storage/logs/
 ./-services&configs/php-config/php.ini
 
