@@ -86,16 +86,17 @@ class ConditionParser
 //            '/^(\w+)\s+IN\s*\(([\w\s,]+)\)$/' => 'IN'
 
             //update: ([\w\- ]+) matches any sequence of non‑space characters, (.+) to allow spaces in the field name
-            '/^([\w\- ]+)\s*=\s*(.+)$/' => '=',
-            '/^([\w\- ]+)\s*!=\s*(.+)$/' => '!=',
-            '/^([\w\- ]+)\s*>\s*(.+)$/' => '>',
-            '/^([\w\- ]+)\s*<\s*(.+)$/' => '<',
             '/^([\w\- ]+)\s*>=\s*(.+)$/' => '>=',
             '/^([\w\- ]+)\s*<=\s*(.+)$/' => '<=',
+            '/^([\w\- ]+)\s*>\s*(.+)$/' => '>',
+            '/^([\w\- ]+)\s*<\s*(.+)$/' => '<',
+            '/^([\w\- ]+)\s*!=\s*(.+)$/' => '!=',
+            '/^([\w\- ]+)\s*=\s*(.+)$/' => '=',
             // LIKE operator
             '/^([\w\- ]+)\s+LIKE\s+(.+)$/' => 'LIKE',
             // IN operator (for comma-separated lists)
-            '/^([\w\- ]+)\s+IN\s*\(([\w\s,]+)\)$/' => 'IN'
+            '/^([\w\- ]+)\s+IN\s*\(([\w\-\s,]+)\)$/i' => 'IN'
+//            '/^([\w\- ]+)\s+IN\s*\(([\w\s,]+)\)$/' => 'IN'
         ];
 
         foreach ($patterns as $pattern => $op) {

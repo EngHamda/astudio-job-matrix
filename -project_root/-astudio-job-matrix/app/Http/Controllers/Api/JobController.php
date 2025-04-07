@@ -38,7 +38,10 @@ class JobController extends Controller
 //            ]);
 
             $filter = $request->query('filter');
-            $perPage = $request->query('per_page', 15);
+            $perPage = $request->query('per_page', 2);
+            $sortField = $request->query('sort');
+            $sortDirection = $request->query('direction', 'asc'); // Default to ascending if not specified
+
 
             $query = Job::query();
 
@@ -46,12 +49,44 @@ class JobController extends Controller
                 $query = $this->filterService->applyFilters($query, $filter);
             }
 
+            // Apply sorting if provided
+            if ($sortField) {
+                // Check if the sort field exists in the model to prevent SQL injection
+                $allowedSortFields = config('job_filters')['job_columns'];
+                if (in_array($sortField, $allowedSortFields)) {
+                    // Validate direction
+                    $direction = strtolower($sortDirection) === 'asc' ? 'asc' : 'desc';
+                    $query->orderBy($sortField, $direction);
+                }
+            }
+
             // Load relationships eagerly to avoid N+1 query problems
             $query->with(['languages', 'locations', 'categories', 'jobAttributeValues.attribute']);
             $jobs = $query->paginate($perPage);
 
+            // Create a custom response that preserves pagination but uses the resource for data
+            return response()->json([
+                'current_page' => $jobs->currentPage(),
+                'data' => JobResource::collection($jobs->items()),
+                'first_page_url' => $jobs->url(1),
+                'from' => $jobs->firstItem(),
+                'last_page' => $jobs->lastPage(),
+                'last_page_url' => $jobs->url($jobs->lastPage()),
+                'links' => $jobs->linkCollection()->toArray(),
+                'next_page_url' => $jobs->nextPageUrl(),
+                'path' => $jobs->path(),
+                'per_page' => $jobs->perPage(),
+                'prev_page_url' => $jobs->previousPageUrl(),
+                'to' => $jobs->lastItem(),
+                'total' => $jobs->total(),
+            ]);
+            // NOTE: below line has same result got above line but above has the best performance time
+            // This line replaces the return statement in your existing code
+            // return response()->json($jobs->through(fn($job) => new JobResource($job)));
+
             // Transform using resource to include relationships and EAV data
-            return response()->json(JobResource::collection($jobs));
+            //return response()->json(JobResource::collection($jobs));//without pagination data, but data jobs are formated
+            //return response()->json($jobs);//with pagination data, but data jobs aren't formated
         } catch (ModelNotFoundException $e) {
             // Handle not found errors
             Log::warning("Job not found", ['error' => $e->getMessage()]);

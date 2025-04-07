@@ -155,15 +155,16 @@ class EavConditionHandler extends AbstractConditionHandler
             throw new FilterException("Invalid operator for boolean attribute: " . $operator);
         }
 
+        //to convert various truthy/falsy inputs into a proper boolean—or null
         $boolValue = filter_var($value, FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE);
         if ($boolValue === null) {
             Log::warning("Invalid boolean value for attribute", ['value' => $value]);
             throw new FilterException("Invalid boolean value for attribute: " . $value);
         }
-
+        
         return $query->whereHas('jobAttributeValues', function ($subQuery) use ($attributeId, $operator, $boolValue) {
             $subQuery->where('attribute_id', $attributeId)
-                ->where('value', $operator, $boolValue ? '1' : '0');
+                ->where('value', $operator, $boolValue ? 'ture' : 'false');
         });
     }
 

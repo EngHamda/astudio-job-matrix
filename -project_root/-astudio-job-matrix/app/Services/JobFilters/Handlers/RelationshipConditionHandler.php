@@ -41,7 +41,8 @@ class RelationshipConditionHandler extends AbstractConditionHandler
         }
 
         // Check for = operator
-        if (preg_match('/^([\w:]+)\s+=\s+(.+)$/', $conditionStr, $matches)) {
+        //Use \s* (zero-or-more spaces) instead of \s+, so it will match whether or not spaces
+        if (preg_match('/^([\w:]+)\s*=\s*(.+)$/', $conditionStr, $matches)) {
             [, $relationship, $value] = $matches;
             return $this->applyEqualityCondition($query, $relationship, trim($value));
         }
@@ -53,13 +54,13 @@ class RelationshipConditionHandler extends AbstractConditionHandler
 
             if (empty($values)) {
                 Log::warning("No values provided for relationship filter", ['relationship' => $relationship]);
-                return $query;
+                throw new FilterException("No values provided for relationship filter: $relationship");
             }
 
             // Check if the relationship is valid
             if (!in_array(Str::before($relationship, ':'), $this->config['relationship_filters'])) {
                 Log::warning("Invalid relationship filter", ['relationship' => $relationship]);
-                return $query;
+                throw new FilterException("Invalid relationship filter: $relationship");
             }
 
             switch ($operator) {
@@ -74,7 +75,6 @@ class RelationshipConditionHandler extends AbstractConditionHandler
 
         Log::warning("Invalid relationship condition format", ['condition' => $conditionStr]);
         throw new FilterException("Invalid relationship condition format: $conditionStr");
-//        return $query;
     }
 
     /**
@@ -143,6 +143,7 @@ class RelationshipConditionHandler extends AbstractConditionHandler
      * @param Builder $query
      * @param string $relationship
      * @return Builder
+     * @throws FilterException
      */
     protected function applyExistsCondition(Builder $query, string $relationship): Builder
     {
@@ -150,7 +151,8 @@ class RelationshipConditionHandler extends AbstractConditionHandler
         // Check if the relationship is valid
         if (!in_array($relationName, $this->config['relationship_filters'])) {
             Log::warning("Invalid relationship filter", ['relationship' => $relationName]);
-            return $query;
+            throw new FilterException("Invalid relationship filter: $relationName");
+
         }
 
         return $query->has($relationName);
@@ -163,6 +165,7 @@ class RelationshipConditionHandler extends AbstractConditionHandler
      * @param string $relationship
      * @param string $value
      * @return Builder
+     * @throws FilterException
      */
     protected function applyEqualityCondition(Builder $query, string $relationship, string $value): Builder
     {
@@ -170,7 +173,7 @@ class RelationshipConditionHandler extends AbstractConditionHandler
         // Check if the relationship is valid
         if (!in_array($relationName, $this->config['relationship_filters'])) {
             Log::warning("Invalid relationship filter", ['relationship' => $relationName]);
-            return $query;
+            throw new FilterException("Invalid relationship filter: $relationName");
         }
 
         return $query->whereHas($relationName, function ($subQuery) use ($field, $value) {

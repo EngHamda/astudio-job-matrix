@@ -1,0 +1,784 @@
+{
+	"info": {
+		"_postman_id": "ae1d4921-85cb-426c-8957-a5b260379b75",
+		"name": "Job Filtering API",
+		"description": "Collection for testing the Job Board API with advanced filtering capabilities",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "30900189"
+	},
+	"item": [
+		{
+			"name": "Basic Jobs Endpoints",
+			"item": [
+				{
+					"name": "Get All Jobs",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/jobs",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"jobs"
+							]
+						},
+						"description": "Retrieve all jobs without filters"
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Basic Field Filters",
+			"item": [
+				{
+					"name": "Filter by Job Type (Equal)",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/jobs?filter=job_type=full-time",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"jobs"
+							],
+							"query": [
+								{
+									"key": "filter",
+									"value": "job_type=full-time"
+								}
+							]
+						},
+						"description": "Get all full-time jobs"
+					},
+					"response": []
+				},
+				{
+					"name": "Filter by Job Type (Not Equal)",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/jobs?filter=job_type!=full-time",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"jobs"
+							],
+							"query": [
+								{
+									"key": "filter",
+									"value": "job_type!=full-time"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Filter by Job Type (IN)",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/jobs?filter=job_type IN (full-time,contract)",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"jobs"
+							],
+							"query": [
+								{
+									"key": "filter",
+									"value": "job_type IN (full-time,contract)"
+								}
+							]
+						},
+						"description": "Get all full-time or contract jobs"
+					},
+					"response": []
+				},
+				{
+					"name": "Filter by Salary (Greater Than)",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/jobs?filter=salary_min>=80000",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"jobs"
+							],
+							"query": [
+								{
+									"key": "filter",
+									"value": "salary_min>=80000"
+								}
+							]
+						},
+						"description": "Get jobs with minimum salary of at least $80,000"
+					},
+					"response": []
+				},
+				{
+					"name": "Filter by Salary Range",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/jobs?filter=salary_min>=50000 AND salary_max<=100000",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"jobs"
+							],
+							"query": [
+								{
+									"key": "filter",
+									"value": "salary_min>=50000 AND salary_max<=100000"
+								}
+							]
+						},
+						"description": "Get jobs with salary range between $50,000 and $100,000"
+					},
+					"response": []
+				},
+				{
+					"name": "Filter by Remote Status",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/jobs?filter=is_remote=true",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"jobs"
+							],
+							"query": [
+								{
+									"key": "filter",
+									"value": "is_remote=true"
+								}
+							]
+						},
+						"description": "Get all remote jobs"
+					},
+					"response": []
+				},
+				{
+					"name": "Filter by Title (LIKE)",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/jobs?filter=title LIKE Word",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"jobs"
+							],
+							"query": [
+								{
+									"key": "filter",
+									"value": "title LIKE Word"
+								}
+							]
+						},
+						"description": "Get jobs with 'developer' in the title"
+					},
+					"response": []
+				},
+				{
+					"name": "Filter by Publication Date",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/jobs?filter=published_at>=2025-02-01",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"jobs"
+							],
+							"query": [
+								{
+									"key": "filter",
+									"value": "published_at>=2025-02-01"
+								}
+							]
+						},
+						"description": "Get jobs published on or after March 1, 2025"
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Relationship Filters",
+			"item": [
+				{
+					"name": "Filter by Language (HAS_ANY)",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/jobs?filter=languages:name HAS_ANY (English,Spanish)",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"jobs"
+							],
+							"query": [
+								{
+									"key": "filter",
+									"value": "languages:name HAS_ANY (English,Spanish)"
+								}
+							]
+						},
+						"description": "Get jobs requiring either English or Spanish"
+					},
+					"response": []
+				},
+				{
+					"name": "Filter by Language (HAS_ALL)",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/jobs?filter=languages:name HAS_ALL (English,Spanish)",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"jobs"
+							],
+							"query": [
+								{
+									"key": "filter",
+									"value": "languages:name HAS_ALL (English,Spanish)"
+								}
+							]
+						},
+						"description": "Get jobs requiring both English and Spanish"
+					},
+					"response": []
+				},
+				{
+					"name": "Filter by Location (IS_ANY)",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/jobs?filter=locations:city IS_ANY (New York,San Francisco)",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"jobs"
+							],
+							"query": [
+								{
+									"key": "filter",
+									"value": "locations:city IS_ANY (New York,San Francisco)"
+								}
+							]
+						},
+						"description": "Get jobs located in either New York or San Francisco"
+					},
+					"response": []
+				},
+				{
+					"name": "Filter by Category (EXISTS)",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/jobs?filter=categories EXISTS",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"jobs"
+							],
+							"query": [
+								{
+									"key": "filter",
+									"value": "categories EXISTS"
+								}
+							]
+						},
+						"description": "Get jobs that have at least one category assigned"
+					},
+					"response": []
+				},
+				{
+					"name": "Filter by Category Name",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/jobs?filter=categories:name=Customer Support",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"jobs"
+							],
+							"query": [
+								{
+									"key": "filter",
+									"value": "categories:name=Customer Support"
+								}
+							]
+						},
+						"description": "Get jobs in the Software Engineering category"
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "EAV Filters",
+			"item": [
+				{
+					"name": "Filter by Experience Level (Equal)",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/jobs?filter=attribute:Experience Level=Senior Level",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"jobs"
+							],
+							"query": [
+								{
+									"key": "filter",
+									"value": "attribute:Experience Level=Senior Level"
+								}
+							]
+						},
+						"description": "Get jobs requiring Senior Level experience"
+					},
+					"response": []
+				},
+				{
+					"name": "Filter by Experience Level (IN)",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/jobs?filter=attribute:Experience Level IN (Mid Level,Senior Level)",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"jobs"
+							],
+							"query": [
+								{
+									"key": "filter",
+									"value": "attribute:Experience Level IN (Mid Level,Senior Level)"
+								}
+							]
+						},
+						"description": "Get jobs requiring either Mid Level or Senior Level experience"
+					},
+					"response": []
+				},
+				{
+					"name": "Filter by Years of Experience (Greater Than)",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/jobs?filter=attribute:Years of Experience>=5",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"jobs"
+							],
+							"query": [
+								{
+									"key": "filter",
+									"value": "attribute:Years of Experience>=5"
+								}
+							]
+						},
+						"description": "Get jobs requiring at least 5 years of experience"
+					},
+					"response": []
+				},
+				{
+					"name": "Filter by Boolean Attribute",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/jobs?filter=attribute:Relocation Possible=false",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"jobs"
+							],
+							"query": [
+								{
+									"key": "filter",
+									"value": "attribute:Relocation Possible=false"
+								}
+							]
+						},
+						"description": "Get jobs where relocation is possible"
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Complex Filters",
+			"item": [
+				{
+					"name": "Remote Full-time Jobs",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/jobs?filter=job_type=full-time AND is_remote=true",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"jobs"
+							],
+							"query": [
+								{
+									"key": "filter",
+									"value": "job_type=full-time AND is_remote=true"
+								}
+							]
+						},
+						"description": "Get all full-time remote jobs"
+					},
+					"response": []
+				},
+				{
+					"name": "High-Paying Remote Jobs",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/jobs?filter=is_remote=true AND salary_min>=100000",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"jobs"
+							],
+							"query": [
+								{
+									"key": "filter",
+									"value": "is_remote=true AND salary_min>=100000"
+								}
+							]
+						},
+						"description": "Get remote jobs with minimum salary of at least $100,000"
+					},
+					"response": []
+				},
+				{
+					"name": "Full-time or High-Paying Contract",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/jobs?filter=(job_type=full-time) OR (job_type=contract AND salary_min>=100000)",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"jobs"
+							],
+							"query": [
+								{
+									"key": "filter",
+									"value": "(job_type=full-time) OR (job_type=contract AND salary_min>=100000)"
+								}
+							]
+						},
+						"description": "Get all full-time jobs or high-paying contract jobs"
+					},
+					"response": []
+				},
+				{
+					"name": "Senior Remote Developer Jobs",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/jobs?filter=is_remote=true AND title LIKE Service AND attribute:Experience Level=Senior Level",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"jobs"
+							],
+							"query": [
+								{
+									"key": "filter",
+									"value": "is_remote=true AND title LIKE Service AND attribute:Experience Level=Senior Level"
+								}
+							]
+						},
+						"description": "Get remote developer jobs requiring senior level experience"
+					},
+					"response": []
+				},
+				{
+					"name": "Complex Language and Location",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/jobs?filter=(languages:name HAS_ANY (English,Spanish)) AND (locations:city IS_ANY (New York,San Francisco))",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"jobs"
+							],
+							"query": [
+								{
+									"key": "filter",
+									"value": "(languages:name HAS_ANY (English,Spanish)) AND (locations:city IS_ANY (New York,San Francisco))"
+								}
+							]
+						},
+						"description": "Get jobs requiring English or Spanish in New York or San Francisco"
+					},
+					"response": []
+				},
+				{
+					"name": "Full Example with All Filter Types",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/jobs?filter=(job_type=full-time AND (languages:name HAS_ANY (English,Spanish))) AND (locations:city IS_ANY (New York,Remote)) AND attribute:Experience Level=Entry Level",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"jobs"
+							],
+							"query": [
+								{
+									"key": "filter",
+									"value": "(job_type=full-time AND (languages:name HAS_ANY (English,Spanish))) AND (locations:city IS_ANY (New York,Remote)) AND attribute:Experience Level=Entry Level"
+								}
+							]
+						},
+						"description": "Get full-time jobs requiring English or Spanish, located in New York or Remote, with Senior Level experience"
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Pagination and Sorting",
+			"item": [
+				{
+					"name": "Paginated Results",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/jobs?page=2&per_page=2",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"jobs"
+							],
+							"query": [
+								{
+									"key": "page",
+									"value": "2"
+								},
+								{
+									"key": "per_page",
+									"value": "2"
+								}
+							]
+						},
+						"description": "Get the first page of jobs with 10 items per page"
+					},
+					"response": []
+				},
+				{
+					"name": "Sorted Results (Ascending)",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/jobs?page=1&per_page=10&sort=published_at&direction=asc",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"jobs"
+							],
+							"query": [
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "per_page",
+									"value": "10"
+								},
+								{
+									"key": "sort",
+									"value": "published_at"
+								},
+								{
+									"key": "direction",
+									"value": "asc"
+								}
+							]
+						},
+						"description": "Get jobs sorted by minimum salary (ascending)"
+					},
+					"response": []
+				},
+				{
+					"name": "Sorted Results (Descending)",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/jobs?page=1&per_page=10&sort=published_at&direction=desc",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"jobs"
+							],
+							"query": [
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "per_page",
+									"value": "10"
+								},
+								{
+									"key": "sort",
+									"value": "published_at"
+								},
+								{
+									"key": "direction",
+									"value": "desc"
+								}
+							]
+						},
+						"description": "Get jobs sorted by minimum salary (descending)"
+					},
+					"response": []
+				},
+				{
+					"name": "Filter with Pagination and Sorting",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/jobs?filter=job_type=full-time&page=1&per_page=10&sort=published_at",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"jobs"
+							],
+							"query": [
+								{
+									"key": "filter",
+									"value": "job_type=full-time"
+								},
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "per_page",
+									"value": "10"
+								},
+								{
+									"key": "sort",
+									"value": "published_at"
+								}
+							]
+						},
+						"description": "Get the first page of full-time jobs, sorted by publication date (newest first)"
+					},
+					"response": []
+				}
+			]
+		}
+	],
+	"variable": [
+		{
+			"key": "baseUrl",
+			"value": "http://localhost:8000",
+			"type": "string"
+		}
+	]
+}
